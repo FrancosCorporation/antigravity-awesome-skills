@@ -10,8 +10,7 @@ We track the `main` branch.
 
 If you find a security vulnerability (e.g., a skill that bypasses the "Authorized Use Only" check or executes malicious code without warning):
 
-1. Email: `security@antigravity.dev` (Placeholder)
-2. Or open a **Private Advisory** on this repository.
+1. Use GitHub's **Report a vulnerability** feature for this repository to send a private advisory, if enabled.
 
 ## Offensive Skills Policy
 
