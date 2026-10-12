@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- The installer validates the existing clone's origin, applies requested version tags to existing installs, and refuses non-fast-forward updates.
+- Updated the `yaml` build dependency to `2.9.1` to resolve a stack-overflow vulnerability.
+
+### Security
+
+- Registry CI and npm publish workflows now use read-only repository permissions; generated-file drift fails CI instead of being pushed by the workflow.
+- High-severity npm audit findings now fail CI.
+
 ## [5.5.0] - 2026-02-16 - "Laravel Pro & ReactFlow Architect"
 
 > **Advanced Laravel engineering roles and ReactFlow architecture patterns.**

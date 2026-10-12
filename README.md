@@ -156,7 +156,7 @@ npx antigravity-awesome-skills --path .agents/skills
 npx antigravity-awesome-skills --path ./my-skills
 ```
 
-Run `npx antigravity-awesome-skills --help` for all options. If the directory already exists, the installer runs `git pull` to update.
+Run `npx antigravity-awesome-skills --help` for all options. An existing install is updated only when its `origin` points to this repository; updates use fast-forward only. `--version` and `--tag` also apply to existing installs and check out the requested tag.
 
 ### Option B: git clone
 

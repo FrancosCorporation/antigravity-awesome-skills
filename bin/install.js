@@ -9,8 +9,43 @@ const HOME = process.env.HOME || process.env.USERPROFILE || '';
 
 function resolveDir(p) {
   if (!p) return null;
-  const s = p.replace(/^~($|\/)/, HOME + '$1');
-  return path.resolve(s);
+  if (p === '~') return path.resolve(HOME);
+  if (p.startsWith('~/')) p = path.join(HOME, p.slice(2));
+  return path.resolve(p);
+}
+
+function requestedTag(opts) {
+  if (opts.tagArg) return opts.tagArg;
+  if (!opts.versionArg) return null;
+  return opts.versionArg.startsWith('v') ? opts.versionArg : `v${opts.versionArg}`;
+}
+
+function normalizeGitHubRepo(remote) {
+  return remote.trim()
+    .replace(/^git@github\.com:/i, 'https://github.com/')
+    .replace(/^ssh:\/\/git@github\.com\//i, 'https://github.com/')
+    .replace(/\/+$/, '')
+    .replace(/\.git$/i, '')
+    .toLowerCase();
+}
+
+function getOrigin(target) {
+  const result = spawnSync('git', ['-C', target, 'remote', 'get-url', 'origin'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
+  return result.status === 0 ? result.stdout.trim() : null;
+}
+
+function validateTag(tag) {
+  const result = spawnSync('git', ['check-ref-format', `refs/tags/${tag}`], {
+    stdio: 'ignore',
+  });
+  if (result.status !== 0) {
+    console.error(`Invalid tag name: ${tag}`);
+    process.exit(1);
+  }
+  return `refs/tags/${tag}`;
 }
 
 function parseArgs() {
@@ -80,7 +115,8 @@ function run(cmd, args, opts = {}) {
 
 function main() {
   const opts = parseArgs();
-  const { tagArg, versionArg } = opts;
+  const tag = requestedTag(opts);
+  const tagRef = tag ? validateTag(tag) : null;
   
   if (opts.help) {
     printHelp();
@@ -96,9 +132,19 @@ function main() {
   if (fs.existsSync(target)) {
     const gitDir = path.join(target, '.git');
     if (fs.existsSync(gitDir)) {
+      const origin = getOrigin(target);
+      if (!origin || normalizeGitHubRepo(origin) !== normalizeGitHubRepo(REPO)) {
+        console.error(`Directory is a git repo with an unexpected origin: ${target}`);
+        console.error(`Expected ${REPO}; refusing to update another repository.`);
+        process.exit(1);
+      }
       console.log('Directory already exists and is a git repo. Updating…');
-      process.chdir(target);
-      run('git', ['pull']);
+      if (tagRef) {
+        run('git', ['-C', target, 'fetch', '--tags', 'origin']);
+        run('git', ['-C', target, 'checkout', '--detach', tagRef]);
+      } else {
+        run('git', ['-C', target, 'pull', '--ff-only']);
+      }
       return;
     }
     console.error(`Directory exists and is not a git repo: ${target}`);
@@ -122,11 +168,9 @@ function main() {
     run('git', ['clone', REPO, target]);
   }
 
-  const ref = tagArg || (versionArg ? (versionArg.startsWith('v') ? versionArg : `v${versionArg}`) : null);
-  if (ref) {
-    console.log(`Checking out ${ref}…`);
-    process.chdir(target);
-    run('git', ['checkout', ref]);
+  if (tagRef) {
+    console.log(`Checking out ${tag}…`);
+    run('git', ['-C', target, 'checkout', '--detach', tagRef]);
   }
 
   console.log(`\nInstalled to ${target}`);
