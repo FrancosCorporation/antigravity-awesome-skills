@@ -32,6 +32,7 @@
     "body-parser": "^1.20.6",
     "@tootallnate/once": "^2.0.1",
     "path-to-regexp": "^0.1.13",
-    "minimatch": "^3.1.4"
+    "minimatch": "^3.1.4",
+    "http-cache-semantics": "^4.3.0"
   }
 }
